@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1746a2">
+  <meta name="description" content="Scholarship Eligibility Checker">
+  <title>Scholarship Eligibility Checker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    :root { color-scheme: light; --blue:#1746a2; --ink:#172033; --muted:#64748b; --line:#dbe3ef; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:linear-gradient(145deg,#edf4ff,#f8fbff 55%,#eefbf7); color:var(--ink); padding:24px 14px; }
+    .wrap { width:min(760px,100%); margin:0 auto; }
+    header { text-align:center; margin:8px 0 22px; }
+    .logo { display:inline-grid; place-items:center; width:58px; height:58px; border-radius:18px; background:var(--blue); color:white; font-size:28px; box-shadow:0 8px 22px #1746a233; }
+    h1 { margin:12px 0 6px; font-size:clamp(1.55rem,4vw,2.15rem); }
+    header p { margin:0; color:var(--muted); }
+    .card { background:white; border:1px solid var(--line); border-radius:22px; padding:clamp(18px,4vw,30px); box-shadow:0 14px 40px #1e3a5f12; }
+    h2 { font-size:1.1rem; margin:0 0 16px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .field { display:flex; flex-direction:column; gap:7px; }
+    .field.full { grid-column:1/-1; }
+    label { font-weight:650; font-size:.93rem; }
+    input { width:100%; border:1px solid #cbd5e1; border-radius:11px; padding:13px 12px; font:inherit; background:#fff; color:var(--ink); }
+    input:focus { outline:3px solid #1746a222; border-color:var(--blue); }
+    .hint { color:var(--muted); font-size:.8rem; }
+    button { border:0; border-radius:12px; padding:14px 18px; font:inherit; font-weight:700; cursor:pointer; }
+    .primary { background:var(--blue); color:white; width:100%; margin-top:20px; }
+    .primary:active { transform:translateY(1px); }
+    .secondary { background:#eaf0fb; color:var(--blue); }
+    #result { margin-top:20px; display:none; }
+    .result-head { border-radius:14px; padding:16px; margin-bottom:16px; }
+    .eligible { background:#e8f8ef; color:#126238; }
+    .not-eligible { background:#fff2e8; color:#91420d; }
+    .result-head h2 { margin:0 0 5px; font-size:1.25rem; }
+    .student { color:#475569; font-size:.92rem; line-height:1.6; }
+    .result-list { margin:8px 0 18px; padding-left:21px; line-height:1.8; overflow-wrap:anywhere; }
+    .result-list li { padding-left:3px; }
+    .empty { color:var(--muted); }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .actions button { flex:1; }
+    footer { text-align:center; color:var(--muted); font-size:.8rem; padding:18px 8px 4px; }
+    #installBtn { display:none; margin:0 auto 16px; }
+    @media(max-width:560px) { .grid { grid-template-columns:1fr; } .field.full { grid-column:auto; } body { padding:16px 11px; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="logo" aria-hidden="true">🎓</div>
+      <h1>Scholarship Eligibility Checker</h1>
+      <p>Suriin kung pasok ka sa scholarship requirements.</p>
+    </header>
+
+    <button id="installBtn" class="secondary" type="button">⬇ Install App</button>
+
+    <section class="card">
+      <h2>Student Information</h2>
+      <form id="checkerForm">
+        <div class="grid">
+          <div class="field full">
+            <label for="name">Student Name</label>
+            <input id="name" name="name" type="text" placeholder="Ilagay ang buong pangalan" required>
+          </div>
+          <div class="field full">
+            <label for="studentId">Student ID</label>
+            <input id="studentId" name="studentId" type="text" placeholder="Ilagay ang student ID" required>
+          </div>
+          <div class="field">
+            <label for="grade">General Average (0–100)</label>
+            <input id="grade" name="grade" type="number" min="0" max="100" step="0.01" placeholder="Hal. 90" required>
+          </div>
+          <div class="field">
+            <label for="attendance">Attendance Percentage (%)</label>
+            <input id="attendance" name="attendance" type="number" min="0" max="100" step="0.01" placeholder="Hal. 95" required>
+          </div>
+          <div class="field full">
+            <label for="income">Monthly Family Income (PHP)</label>
+            <input id="income" name="income" type="number" min="0" step="0.01" placeholder="Hal. 15000" required>
+            <span class="hint">Gamitin ang buwanang kita ng pamilya.</span>
+          </div>
+        </div>
+        <button class="primary" type="submit">Check Scholarship Eligibility</button>
+      </form>
+
+      <section id="result" aria-live="polite">
+        <div id="decision" class="result-head">
+          <h2 id="decisionTitle"></h2>
+          <div id="studentDetails" class="student"></div>
+        </div>
+        <h2>Conditions Met</h2>
+        <ul id="metList" class="result-list"></ul>
+        <h2>Conditions Still Need Improvement</h2>
+        <ul id="notMetList" class="result-list"></ul>
+        <div class="actions">
+          <button id="printBtn" class="secondary" type="button">Print Result</button>
+          <button id="resetBtn" class="secondary" type="button">Clear Form</button>
+        </div>
+      </section>
+    </section>
+    <footer>Requirements: Grade ≥ 80 · Attendance ≥ 85% · Monthly family income ≤ ₱20,000</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById('checkerForm');
+    const result = document.getElementById('result');
+    const money = n => '₱' + Number(n).toLocaleString('en-PH', {maximumFractionDigits:2});
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const studentId = document.getElementById('studentId').value.trim();
+      const grade = Number(document.getElementById('grade').value);
+      const attendance = Number(document.getElementById('attendance').value);
+      const income = Number(document.getElementById('income').value);
+
+      if (!name || !studentId) { alert('Pakilagay ang student name at student ID.'); return; }
+      if (!Number.isFinite(grade) || grade < 0 || grade > 100) { alert('Invalid General Average! Dapat 0 hanggang 100.'); return; }
+      if (!Number.isFinite(attendance) || attendance < 0 || attendance > 100) { alert('Invalid Attendance Percentage! Dapat 0 hanggang 100.'); return; }
+      if (!Number.isFinite(income) || income < 0) { alert('Invalid Family Income! Hindi puwedeng negative.'); return; }
+
+      const met = [], notMet = [];
+      if (grade >= 80) met.push(`General Average (${grade} ≥ 80)`);
+      else notMet.push(`General Average (${grade} < 80)`);
+      if (attendance >= 85) met.push(`Attendance (${attendance}% ≥ 85%)`);
+      else notMet.push(`Attendance (${attendance}% < 85%)`);
+      if (income <= 20000) met.push(`Family Income (${money(income)} ≤ ₱20,000)`);
+      else notMet.push(`Family Income (${money(income)} > ₱20,000)`);
+
+      document.getElementById('decision').className = 'result-head ' + (notMet.length === 0 ? 'eligible' : 'not-eligible');
+      document.getElementById('decisionTitle').textContent = notMet.length === 0 ? 'ELIGIBLE FOR SCHOLARSHIP!' : 'NOT ELIGIBLE FOR SCHOLARSHIP.';
+      document.getElementById('studentDetails').textContent = `Student Name: ${name} · Student ID: ${studentId}`;
+      const fillList = (id, items) => {
+        const ul = document.getElementById(id); ul.replaceChildren();
+        if (!items.length) { const li = document.createElement('li'); li.className='empty'; li.textContent='None'; ul.append(li); }
+        else items.forEach(item => { const li=document.createElement('li'); li.textContent=item; ul.append(li); });
+      };
+      fillList('metList', met);
+      fillList('notMetList', notMet);
+      result.style.display = 'block';
+      result.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      form.reset(); result.style.display='none'; window.scrollTo({top:0,behavior:'smooth'});
+    });
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    let installPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault(); installPrompt=event; installBtn.style.display='block';
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!installPrompt) return;
+      installPrompt.prompt(); await installPrompt.userChoice; installPrompt=null; installBtn.style.display='none';
+    });
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));
+    }
+  </script>
+</body>
+</html>
